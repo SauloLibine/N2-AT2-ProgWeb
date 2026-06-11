@@ -1,0 +1,50 @@
+@import url('https://fonts.googleapis.com/css2?family=Alata&family=Bebas+Neue&family=Comfortaa&family=Poppins:wght@300;400;500;600&family=Quicksand&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* :root{
+  --heineken: #00ff00;
+}
+
+body{ margin:0 } */
+
+/* .cabecalho-txt-it{
+  color: #fff;
+  font-size: 1.125rem;
+  font-weight: 500;
+  letter-spacing: 0.025em;
+} */
+
+/* .inicio-txt{
+  color: #fff;
+  font-size: 4rem;
+  font-weight: 600;
+  line-height: 1.1;
+} */
+
+/* .cervejas{
+  transition: transform 0.5s ease;
+  cursor: pointer;
+} */
+
+/* .cervejas:hover{
+  transform: scale(1.1);
+} */
+
+.animate-gradiente{
+  background: linear-gradient(135deg, #01d301 0%, #017c07 35%, #005300 65%, #001d00 100%);
+  background-size: 300% 300%;
+  animation: gradiente 10s ease infinite;
+}
+
+@keyframes gradiente {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+}

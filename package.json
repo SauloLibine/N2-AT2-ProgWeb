@@ -1,0 +1,37 @@
+{
+  "devDependencies": {
+    "autoprefixer": "^10.5.0",
+    "postcss": "^8.5.15",
+    "tailwindcss": "^3.4.0",
+    "vite": "^8.0.16"
+  },
+  "name": "mars-cervejaria",
+  "version": "1.0.0",
+  "description": "Site convertido para Vite + React + Tailwind",
+  "main": "index.js",
+  "dependencies": {
+    "detect-libc": "^2.1.2",
+    "fdir": "^6.5.0",
+    "lightningcss": "^1.32.0",
+    "lightningcss-win32-x64-msvc": "^1.32.0",
+    "nanoid": "^3.3.12",
+    "picocolors": "^1.1.1",
+    "picomatch": "^4.0.4",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "rolldown": "^1.0.3",
+    "source-map-js": "^1.2.1",
+    "tinyglobby": "^0.2.17"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "start": "vite",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module"
+}

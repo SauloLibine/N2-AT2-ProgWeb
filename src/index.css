@@ -34,7 +34,7 @@ body{ margin:0 } */
 } */
 
 .animate-gradiente{
-  background: linear-gradient(135deg, #01d301 0%, #017c07 35%, #005300 65%, #001d00 100%);
+  background: linear-gradient(135deg, #7aff7a 0%, #2fbe36 35%, #086908 65%, #001400 100%);
   background-size: 300% 300%;
   animation: gradiente 10s ease infinite;
 }

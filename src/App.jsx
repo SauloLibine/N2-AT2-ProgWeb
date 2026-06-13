@@ -13,7 +13,7 @@ export default function App(){
     <div className="min-h-screen font-poppins animate-gradiente transition-all text-white">
       <Header onNavigate={setRoute} />
       <main className="p-6">
-        {route === 'home' && <Inicio />}
+        {route === 'home' && <Inicio onNavigate={setRoute} />}
         {route === 'sobre' && <Sobre />}
         {route === 'contatos' && <Contatos />}
         {route === 'adquira' && <Adquira />}

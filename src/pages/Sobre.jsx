@@ -3,7 +3,7 @@ import React from 'react'
 export default function Sobre(){
   return (
     <section className="space-y-10">
-      <div className="relative overflow-hidden rounded-3xl bg-white/10 p-8 shadow-2xl shadow-black/20 backdrop-blur-xl">
+      <div className="relative overflow-hidden rounded-3xl bg-black/30 p-8 shadow-2xl shadow-black/20 backdrop-blur-xl">
         <div className="max-w-3xl">
           <p className="text-4xl font-semibold text-white">História</p>
           <p className="mt-6 text-white/90 leading-8">
@@ -13,7 +13,7 @@ export default function Sobre(){
         </div>
       </div>
 
-      <div className="relative overflow-hidden rounded-3xl bg-white/10 p-8 shadow-2xl shadow-black/20 backdrop-blur-xl">
+      <div className="relative overflow-hidden rounded-3xl bg-black/30 p-8 shadow-2xl shadow-black/20 backdrop-blur-xl">
         <div className="grid gap-8 lg:grid-cols-[1fr_240px]">
           <div>
             <p className="text-4xl font-semibold text-white">Características</p>
@@ -30,7 +30,7 @@ export default function Sobre(){
         </div>
       </div>
 
-      <div className="relative overflow-hidden rounded-3xl bg-white/10 p-8 shadow-2xl shadow-black/20 backdrop-blur-xl">
+      <div className="relative overflow-hidden rounded-3xl bg-black/30 p-8 shadow-2xl shadow-black/20 backdrop-blur-xl">
         <div className="grid gap-8 lg:grid-cols-[1fr_240px]">
           <div>
             <p className="text-4xl font-semibold text-white">Nosso Compromisso com a Felicidade</p>

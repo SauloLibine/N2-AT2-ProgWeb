@@ -6,7 +6,7 @@ export default function Header({ onNavigate }){
         <img src="/imgs/heineken.webp" alt="logo" className="h-32 w-auto" />
         <nav className="flex flex-wrap justify-center gap-6 text-xl">
           <button className="cabecalho-txt-it" onClick={()=>onNavigate('home')}>INÍCIO</button>
-          <button className="cabecalho-txt-it" onClick={()=>onNavigate('sobre')}>SOBRE A MARS</button>
+          <button className="cabecalho-txt-it" onClick={()=>onNavigate('sobre')}>SOBRE</button>
           <button className="cabecalho-txt-it" onClick={()=>onNavigate('contatos')}>CONTATOS</button>
           <button className="cabecalho-txt-it" onClick={()=>onNavigate('adquira')}>ADQUIRA A SUA</button>
           <button className="cabecalho-txt-it" onClick={()=>onNavigate('simounao')}>18+</button>

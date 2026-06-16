@@ -70,6 +70,10 @@ web_modules/
 .env.*
 !.env.example
 
+# Firebase admin service account credentials
+n2-at2-progweb-firebase-adminsdk-fbsvc-6efdce0834.json
+*.adminsdk-*.json
+
 # parcel-bundler cache (https://parceljs.org/)
 .cache
 .parcel-cache
@@ -141,3 +145,19 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Local runtime persistence (do not commit runtime-modified JSON files)
+/data/
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Private keys and credentials
+*.pem
+*.key
+
+# Firebase service account patterns (already listed specific file above, add generic pattern)
+*-firebase-adminsdk-*.json

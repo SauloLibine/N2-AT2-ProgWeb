@@ -1,5 +1,9 @@
 import React from 'react'
 
+/**
+ * Página de aviso exibida para usuários que não confirmaram a maioridade.
+ * @param {{onBack:function}} props
+ */
 export default function Nao({ onBack }){
   return (
     <section className="relative rounded-3xl bg-white/10 p-8 shadow-2xl shadow-black/20 backdrop-blur-xl text-white">

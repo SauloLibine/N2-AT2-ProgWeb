@@ -1,5 +1,9 @@
 import React from 'react'
 
+/**
+ * Modal que solicita confirmação de idade antes de liberar o conteúdo adulto.
+ * @param {{onConfirm:function,onDeny:function}} props
+ */
 export default function AgeVerificationModal({ onConfirm, onDeny }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">

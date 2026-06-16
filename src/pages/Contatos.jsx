@@ -1,5 +1,8 @@
 import React from 'react'
 
+/**
+ * Página de contatos que apresenta canais de atendimento e localização da empresa.
+ */
 export default function Contatos(){
   return (
     <section className="grid gap-10 lg:grid-cols-[1.2fr_0.8fr]">

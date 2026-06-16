@@ -1,5 +1,8 @@
 import React from 'react'
 
+/**
+ * Página institucional que descreve a história, valores e compromisso da marca.
+ */
 export default function Sobre(){
   return (
     <section className="space-y-10">
@@ -18,13 +21,11 @@ export default function Sobre(){
           <div>
             <p className="text-4xl font-semibold text-white">Características</p>
             <p className="mt-6 text-white/90 leading-8">
-              Heineken é uma cerveja do estilo Premium Lager, 
-              originário da Europa. 
-              Esse estilo se caracteriza pelo sabor equilibrado, 
-              leve amargor do lúpulo, aroma suave e alta refrescância. 
-              Produzida com ingredientes selecionados e fermentação de baixa temperatura, 
-              a Heineken apresenta notas maltadas discretas e um final limpo, 
-              sendo apreciada por quem busca uma cerveja leve, porém com personalidade marcante.
+              Somos a casa de mais de 20 marcas icônicas de cerveja, incluindo Heineken, Amstel, Sol, Desperados e muitas outras. 
+              Com presença em mais de 190 países, nossa missão é criar momentos de felicidade para as pessoas ao redor do mundo por meio de nossas cervejas excepcionais.
+              Acreditamos que melhores momentos são compartilhados e amplia seu portfólio além da cerveja, oferecendo qualidade e experiências incriveis para estar cada vez
+              mais no coração dos brasileiros
+
             </p>
           </div>
         </div>

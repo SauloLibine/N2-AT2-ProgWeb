@@ -28,6 +28,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "start": "vite",
+    "api": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

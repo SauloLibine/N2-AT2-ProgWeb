@@ -11,6 +11,7 @@ export default function Header({ onNavigate, user, onLogout }){
         <nav className="flex flex-wrap justify-center gap-6 text-xl">
           <button className="cabecalho-txt-it" onClick={()=>onNavigate('home')}>INÍCIO</button>
           <button className="cabecalho-txt-it" onClick={()=>onNavigate('sobre')}>SOBRE</button>
+          <button className="cabecalho-txt-it" onClick={()=>onNavigate('relatorio')}>RELATORIO</button>
           <button className="cabecalho-txt-it" onClick={()=>onNavigate('contatos')}>CONTATOS</button>
           <button className="cabecalho-txt-it" onClick={()=>onNavigate('adquira')}>ADQUIRA A SUA</button>
           {user ? (

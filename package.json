@@ -11,6 +11,7 @@
   "main": "index.js",
   "dependencies": {
     "detect-libc": "^2.1.2",
+    "express": "^5.2.1",
     "fdir": "^6.5.0",
     "lightningcss": "^1.32.0",
     "lightningcss-win32-x64-msvc": "^1.32.0",

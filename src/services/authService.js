@@ -7,8 +7,11 @@ const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3001/api'
  * @returns {Promise<any>} Dados retornados pela API.
  */
 async function request(path, options = {}) {
+  const rawCurrent = typeof window !== 'undefined' ? localStorage.getItem('mock_current_user') : null
+  const token = rawCurrent ? JSON.parse(rawCurrent)?.uid : null
+  const headers = { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }
   const res = await fetch(`${API_BASE}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     ...options,
   })
   const data = await res.json()

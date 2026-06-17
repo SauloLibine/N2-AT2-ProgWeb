@@ -20,7 +20,7 @@ function sendJson(res, data, status = 200) {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET,POST,PUT,OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   })
   res.end(payload)
 }
@@ -121,7 +121,7 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(204, {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET,POST,PUT,OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     })
     return res.end()
   }
@@ -149,6 +149,10 @@ const server = http.createServer(async (req, res) => {
 
     if (pathname.startsWith('/api/users/') && method === 'GET') {
       const uid = pathname.replace('/api/users/', '')
+      const auth = req.headers['authorization'] || ''
+      if (!auth.startsWith('Bearer ')) return sendJson(res, { message: 'Não autorizado' }, 401)
+      const token = auth.replace('Bearer ', '')
+      if (token !== uid) return sendJson(res, { message: 'Acesso proibido' }, 403)
       const users = await readJson(usersPath)
       const user = users.find((u) => u.uid === uid)
       if (!user) return sendJson(res, { message: 'Usuário não encontrado' }, 404)
@@ -157,6 +161,10 @@ const server = http.createServer(async (req, res) => {
 
     if (pathname.startsWith('/api/users/') && (method === 'PUT' || method === 'PATCH')) {
       const uid = pathname.replace('/api/users/', '')
+      const auth = req.headers['authorization'] || ''
+      if (!auth.startsWith('Bearer ')) return sendJson(res, { message: 'Não autorizado' }, 401)
+      const token = auth.replace('Bearer ', '')
+      if (token !== uid) return sendJson(res, { message: 'Acesso proibido' }, 403)
       const body = await parseBody(req)
       const users = await readJson(usersPath)
       const idx = users.findIndex((u) => u.uid === uid)
@@ -168,6 +176,12 @@ const server = http.createServer(async (req, res) => {
 
     if (pathname === '/api/orders' && method === 'GET') {
       const userId = url.searchParams.get('userId')
+      const auth = req.headers['authorization'] || ''
+      if (userId) {
+        if (!auth.startsWith('Bearer ')) return sendJson(res, { message: 'Não autorizado' }, 401)
+        const token = auth.replace('Bearer ', '')
+        if (token !== userId) return sendJson(res, { message: 'Acesso proibido' }, 403)
+      }
       const orders = await readJson(ordersPath)
       const result = userId ? orders.filter((order) => order.userId === userId) : orders
       return sendJson(res, result)
@@ -176,6 +190,10 @@ const server = http.createServer(async (req, res) => {
     if (pathname === '/api/orders' && method === 'POST') {
       const body = await parseBody(req)
       if (!body.userId) return sendJson(res, { message: 'userId obrigatório' }, 400)
+      const auth = req.headers['authorization'] || ''
+      if (!auth.startsWith('Bearer ')) return sendJson(res, { message: 'Não autorizado' }, 401)
+      const token = auth.replace('Bearer ', '')
+      if (token !== body.userId) return sendJson(res, { message: 'Acesso proibido' }, 403)
       const orders = await readJson(ordersPath)
       const order = {
         id: generateId('order'),

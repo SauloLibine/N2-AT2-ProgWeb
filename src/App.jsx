@@ -10,6 +10,7 @@ import Register from './pages/Register'
 import UserDashboard from './pages/UserDashboard'
 import AgeVerificationModal from './components/AgeVerificationModal'
 import { loginUser, logoutUser, registerUser } from './services/authService'
+import Relatorio from './pages/Relatorio.jsx'
 
 /**
  * Componente raiz da aplicação responsável por gerenciar rotas internas,
@@ -88,6 +89,7 @@ export default function App() {
         {route === 'register' && <Register onRegister={handleRegister} onSwitchToLogin={() => setRoute('login')} />}
         {route === 'dashboard' && user && <UserDashboard user={user} onLogout={handleLogout} onUpdateUser={setUser} />}
         {route === 'nao' && <Nao onBack={() => setRoute('home')} />}
+        {route === 'relatorio' && <Relatorio />}
       </main>
     </div>
   )

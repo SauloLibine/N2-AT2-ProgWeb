@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { createOrder, fetchUserOrders } from '../services/authService'
+import { completeOrder, createOrder, deleteOrder, fetchUserOrders, updateOrder } from '../services/authService'
 
 const beers = [
   { id: 'heineken', name: 'Heineken', price: 12.5, image: 'garrafaHeineken.webp' },
@@ -19,6 +19,8 @@ export default function Adquira() {
   const [cartItems, setCartItems] = useState([])
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(false)
+  const [editingOrderId, setEditingOrderId] = useState(null)
+  const [actionOrderId, setActionOrderId] = useState(null)
 
   /**
    * Carrega o usuário autenticado do armazenamento local e busca pedidos existentes.
@@ -31,6 +33,16 @@ export default function Adquira() {
       fetchUserOrders(current.uid).then(setOrders)
     }
   }, [])
+
+  /**
+   * Recarrega os pedidos do usuário autenticado.
+   * @param {string} uid - Identificador do usuário.
+   */
+  const refreshOrders = async (uid) => {
+    const updated = await fetchUserOrders(uid)
+    setOrders(updated)
+    return updated
+  }
 
   /**
    * Adiciona uma cerveja ao carrinho, incrementando a quantidade se já existir.
@@ -70,6 +82,14 @@ export default function Adquira() {
   const totalPrice = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
 
   /**
+   * Cancela a edição de um pedido e limpa o carrinho usado como formulário.
+   */
+  const cancelOrderEdit = () => {
+    setEditingOrderId(null)
+    setCartItems([])
+  }
+
+  /**
    * Finaliza o pedido do usuário e persiste os dados na API de pedidos.
    * Valida estado do carrinho e exige login antes de enviar a solicitação.
    * @param {React.FormEvent} e
@@ -88,19 +108,91 @@ export default function Adquira() {
 
     setLoading(true)
     try {
-      await createOrder(user.uid, {
+      const orderPayload = {
         items: cartItems.map(({ id, name, price, quantity }) => ({ id, name, price, quantity })),
         total: parseFloat(totalPrice.toFixed(2)),
-      })
-      const updated = await fetchUserOrders(user.uid)
-      setOrders(updated)
+      }
+
+      if (editingOrderId) {
+        await updateOrder(editingOrderId, user.uid, orderPayload)
+        window.alert('Pedido atualizado com sucesso!')
+      } else {
+        await createOrder(user.uid, orderPayload)
+        window.alert('Pedido registrado com sucesso!')
+      }
+
+      await refreshOrders(user.uid)
       setCartItems([])
-      window.alert('Pedido registrado com sucesso!')
+      setEditingOrderId(null)
     } catch (err) {
-      window.alert('Erro ao criar pedido')
+      window.alert(editingOrderId ? 'Erro ao atualizar pedido' : 'Erro ao criar pedido')
     } finally {
       setLoading(false)
     }
+  }
+
+  /**
+   * Carrega um pedido existente no carrinho para edição.
+   * @param {Object} order - Pedido selecionado.
+   */
+  const handleEditOrder = (order) => {
+    const editableItems = order.items.map((item) => {
+      const beer = beers.find((option) => option.id === item.id)
+      return { ...item, image: beer?.image }
+    })
+    setCartItems(editableItems)
+    setEditingOrderId(order.id)
+  }
+
+  /**
+   * Exclui um pedido após confirmação do usuário.
+   * @param {string} orderId - Identificador do pedido.
+   */
+  const handleDeleteOrder = async (orderId) => {
+    if (!user) return
+    const confirmed = window.confirm('Tem certeza que deseja excluir este pedido?')
+    if (!confirmed) return
+
+    setActionOrderId(orderId)
+    try {
+      await deleteOrder(orderId, user.uid)
+      await refreshOrders(user.uid)
+      if (editingOrderId === orderId) cancelOrderEdit()
+      window.alert('Pedido excluído com sucesso!')
+    } catch (err) {
+      window.alert('Erro ao excluir pedido')
+    } finally {
+      setActionOrderId(null)
+    }
+  }
+
+  /**
+   * Marca um pedido como concluído.
+   * @param {string} orderId - Identificador do pedido.
+   */
+  const handleCompleteOrder = async (orderId) => {
+    if (!user) return
+
+    setActionOrderId(orderId)
+    try {
+      await completeOrder(orderId, user.uid)
+      await refreshOrders(user.uid)
+      if (editingOrderId === orderId) cancelOrderEdit()
+      window.alert('Pedido concluído com sucesso!')
+    } catch (err) {
+      window.alert('Erro ao concluir pedido')
+    } finally {
+      setActionOrderId(null)
+    }
+  }
+
+  /**
+   * Retorna o texto exibido para cada status de pedido.
+   * @param {string} status - Status persistido no pedido.
+   */
+  const getStatusLabel = (status) => {
+    if (status === 'completed') return 'Concluído'
+    return 'Pendente'
   }
 
   return (
@@ -141,6 +233,12 @@ export default function Adquira() {
 
         <div className="mt-10 rounded-3xl bg-black/30 p-6">
           <h3 className="text-2xl font-semibold text-white">Carrinho</h3>
+          {editingOrderId && (
+            <div className="mt-4 flex flex-col gap-3 rounded-2xl border border-[#ffb300]/40 bg-[#ffb300]/10 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm font-semibold text-[#ffd36a]">Editando pedido {editingOrderId}</p>
+              <button type="button" onClick={cancelOrderEdit} className="rounded-2xl bg-white/10 px-3 py-2 text-sm font-semibold text-white transition hover:bg-white/20">Cancelar edição</button>
+            </div>
+          )}
           {cartItems.length === 0 ? (
             <p className="mt-4 text-white/70">Nenhum item adicionado ainda.</p>
           ) : (
@@ -170,7 +268,7 @@ export default function Adquira() {
               disabled={loading}
               className="w-full rounded-3xl bg-gradient-to-r from-[#FFA800] to-[#FF2525] px-6 py-4 text-black font-bold transition hover:scale-105 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
             >
-              {loading ? 'Finalizando...' : 'Finalizar pedido'}
+              {loading ? 'Salvando...' : editingOrderId ? 'Salvar alterações' : 'Finalizar pedido'}
             </button>
           </div>
         </div>
@@ -186,11 +284,37 @@ export default function Adquira() {
               <div key={pedido.id} className="rounded-3xl border border-white/10 bg-white/5 p-5">
                 <div className="flex items-center justify-between gap-4">
                   <p className="text-white font-semibold">Pedido {pedido.id}</p>
-                  <span className="rounded-full bg-white/10 px-3 py-1 text-sm text-white/70">{pedido.status}</span>
+                  <span className="rounded-full bg-white/10 px-3 py-1 text-sm text-white/70">{getStatusLabel(pedido.status)}</span>
                 </div>
                 <div className="mt-3 text-white/70">
                   <p>Total: R$ {pedido.total?.toFixed(2) ?? '0.00'}</p>
                   <p className="mt-2">Itens: {pedido.items.map((it) => `${it.name}${it.quantity ? ` x${it.quantity}` : ''}`).join(', ')}</p>
+                </div>
+                <div className="mt-5 flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    onClick={() => handleEditOrder(pedido)}
+                    disabled={pedido.status === 'completed' || actionOrderId === pedido.id}
+                    className="rounded-2xl bg-[#ffb300] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[#e6a100] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleCompleteOrder(pedido.id)}
+                    disabled={pedido.status === 'completed' || actionOrderId === pedido.id}
+                    className="rounded-2xl bg-emerald-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {actionOrderId === pedido.id ? 'Processando...' : 'Concluir'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteOrder(pedido.id)}
+                    disabled={actionOrderId === pedido.id}
+                    className="rounded-2xl bg-red-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Excluir
+                  </button>
                 </div>
               </div>
             ))

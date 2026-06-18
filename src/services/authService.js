@@ -120,3 +120,40 @@ export async function createOrder(uid, order) {
 export async function fetchUserOrders(uid) {
   return await request(`/orders?userId=${encodeURIComponent(uid)}`)
 }
+
+/**
+ * Atualiza um pedido existente do usuário autenticado.
+ * @param {string} orderId - Identificador do pedido.
+ * @param {string} uid - Identificador do usuário dono do pedido.
+ * @param {Object} order - Dados atualizados do pedido.
+ * @returns {Promise<any>} Pedido atualizado.
+ */
+export async function updateOrder(orderId, uid, order) {
+  return await request(`/orders/${orderId}`, {
+    method: 'PUT',
+    body: JSON.stringify({ userId: uid, ...order }),
+  })
+}
+
+/**
+ * Marca um pedido como concluído.
+ * @param {string} orderId - Identificador do pedido.
+ * @param {string} uid - Identificador do usuário dono do pedido.
+ * @returns {Promise<any>} Pedido atualizado.
+ */
+export async function completeOrder(orderId, uid) {
+  return await updateOrder(orderId, uid, { status: 'completed' })
+}
+
+/**
+ * Exclui um pedido do usuário autenticado.
+ * @param {string} orderId - Identificador do pedido.
+ * @param {string} uid - Identificador do usuário dono do pedido.
+ * @returns {Promise<any>} Confirmação da exclusão.
+ */
+export async function deleteOrder(orderId, uid) {
+  return await request(`/orders/${orderId}`, {
+    method: 'DELETE',
+    body: JSON.stringify({ userId: uid }),
+  })
+}

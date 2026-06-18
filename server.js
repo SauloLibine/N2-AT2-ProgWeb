@@ -225,6 +225,56 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, order, 201)
     }
 
+    if (pathname.startsWith('/api/orders/') && (method === 'PUT' || method === 'PATCH')) {
+      const orderId = pathname.replace('/api/orders/', '')
+      const body = await parseBody(req)
+      const auth = req.headers['authorization'] || ''
+      if (!auth.startsWith('Bearer ')) return sendJson(res, { message: 'Não autorizado' }, 401)
+
+      const orders = await readJson(ordersPath)
+      const idx = orders.findIndex((order) => order.id === orderId)
+      if (idx === -1) return sendJson(res, { message: 'Pedido não encontrado' }, 404)
+
+      const token = auth.replace('Bearer ', '')
+      if (token !== orders[idx].userId || (body.userId && body.userId !== orders[idx].userId)) {
+        return sendJson(res, { message: 'Acesso proibido' }, 403)
+      }
+
+      orders[idx] = {
+        ...orders[idx],
+        items: body.items ?? orders[idx].items,
+        total: body.total ?? orders[idx].total,
+        status: body.status ?? orders[idx].status,
+        updatedAt: new Date().toISOString(),
+      }
+
+      if (body.status === 'completed') {
+        orders[idx].completedAt = new Date().toISOString()
+      }
+
+      await writeJson(ordersPath, orders)
+      return sendJson(res, orders[idx])
+    }
+
+    if (pathname.startsWith('/api/orders/') && method === 'DELETE') {
+      const orderId = pathname.replace('/api/orders/', '')
+      const body = await parseBody(req)
+      const auth = req.headers['authorization'] || ''
+      if (!auth.startsWith('Bearer ')) return sendJson(res, { message: 'Não autorizado' }, 401)
+
+      const orders = await readJson(ordersPath)
+      const order = orders.find((item) => item.id === orderId)
+      if (!order) return sendJson(res, { message: 'Pedido não encontrado' }, 404)
+
+      const token = auth.replace('Bearer ', '')
+      if (token !== order.userId || (body.userId && body.userId !== order.userId)) {
+        return sendJson(res, { message: 'Acesso proibido' }, 403)
+      }
+
+      await writeJson(ordersPath, orders.filter((item) => item.id !== orderId))
+      return sendJson(res, { message: 'Pedido excluído com sucesso' })
+    }
+
     sendJson(res, { message: 'Rota não encontrada' }, 404)
   } catch (err) {
     console.error(err)

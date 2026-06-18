@@ -20,6 +20,7 @@ export default function Adquira() {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(false)
   const [editingOrderId, setEditingOrderId] = useState(null)
+  const [editOrderItems, setEditOrderItems] = useState([])
   const [actionOrderId, setActionOrderId] = useState(null)
 
   /**
@@ -79,14 +80,16 @@ export default function Adquira() {
     setCartItems((current) => current.filter((item) => item.id !== beerId))
   }
 
-  const totalPrice = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  const calculateItemsTotal = (items) => items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  const totalPrice = calculateItemsTotal(cartItems)
+  const editTotalPrice = calculateItemsTotal(editOrderItems)
 
   /**
-   * Cancela a edição de um pedido e limpa o carrinho usado como formulário.
+   * Cancela a edição de um pedido.
    */
   const cancelOrderEdit = () => {
     setEditingOrderId(null)
-    setCartItems([])
+    setEditOrderItems([])
   }
 
   /**
@@ -113,26 +116,19 @@ export default function Adquira() {
         total: parseFloat(totalPrice.toFixed(2)),
       }
 
-      if (editingOrderId) {
-        await updateOrder(editingOrderId, user.uid, orderPayload)
-        window.alert('Pedido atualizado com sucesso!')
-      } else {
-        await createOrder(user.uid, orderPayload)
-        window.alert('Pedido registrado com sucesso!')
-      }
-
+      await createOrder(user.uid, orderPayload)
       await refreshOrders(user.uid)
       setCartItems([])
-      setEditingOrderId(null)
+      window.alert('Pedido registrado com sucesso!')
     } catch (err) {
-      window.alert(editingOrderId ? 'Erro ao atualizar pedido' : 'Erro ao criar pedido')
+      window.alert('Erro ao criar pedido')
     } finally {
       setLoading(false)
     }
   }
 
   /**
-   * Carrega um pedido existente no carrinho para edição.
+   * Carrega um pedido existente no modo de edição.
    * @param {Object} order - Pedido selecionado.
    */
   const handleEditOrder = (order) => {
@@ -140,8 +136,68 @@ export default function Adquira() {
       const beer = beers.find((option) => option.id === item.id)
       return { ...item, image: beer?.image }
     })
-    setCartItems(editableItems)
+    setEditOrderItems(editableItems)
     setEditingOrderId(order.id)
+  }
+
+  /**
+   * Adiciona uma cerveja ao pedido em edição.
+   * @param {Object} beer - Produto selecionado.
+   */
+  const addToEditingOrder = (beer) => {
+    setEditOrderItems((current) => {
+      const found = current.find((item) => item.id === beer.id)
+      if (found) {
+        return current.map((item) => item.id === beer.id ? { ...item, quantity: item.quantity + 1 } : item)
+      }
+      return [...current, { ...beer, quantity: 1 }]
+    })
+  }
+
+  /**
+   * Atualiza a quantidade de um item do pedido em edição.
+   * @param {string} beerId - Identificador do item.
+   * @param {number} delta - Variação da quantidade.
+   */
+  const updateEditingOrderQuantity = (beerId, delta) => {
+    setEditOrderItems((current) =>
+      current.map((item) => item.id === beerId ? { ...item, quantity: Math.max(1, item.quantity + delta) } : item)
+    )
+  }
+
+  /**
+   * Remove um item do pedido em edição.
+   * @param {string} beerId - Identificador do item.
+   */
+  const removeFromEditingOrder = (beerId) => {
+    setEditOrderItems((current) => current.filter((item) => item.id !== beerId))
+  }
+
+  /**
+   * Salva as alterações feitas no pedido.
+   */
+  const handleSaveEditedOrder = async () => {
+    if (!user || !editingOrderId) return
+
+    if (editOrderItems.length === 0) {
+      window.alert('O pedido precisa ter ao menos um item.')
+      return
+    }
+
+    setActionOrderId(editingOrderId)
+    try {
+      await updateOrder(editingOrderId, user.uid, {
+        items: editOrderItems.map(({ id, name, price, quantity }) => ({ id, name, price, quantity })),
+        total: parseFloat(editTotalPrice.toFixed(2)),
+      })
+      await refreshOrders(user.uid)
+      cancelOrderEdit()
+      window.alert('Pedido atualizado com sucesso!')
+    } catch (err) {
+      window.alert('Erro ao atualizar pedido')
+    } finally {
+      setActionOrderId(null)
+    }
   }
 
   /**
@@ -233,12 +289,6 @@ export default function Adquira() {
 
         <div className="mt-10 rounded-3xl bg-black/30 p-6">
           <h3 className="text-2xl font-semibold text-white">Carrinho</h3>
-          {editingOrderId && (
-            <div className="mt-4 flex flex-col gap-3 rounded-2xl border border-[#ffb300]/40 bg-[#ffb300]/10 p-4 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm font-semibold text-[#ffd36a]">Editando pedido {editingOrderId}</p>
-              <button type="button" onClick={cancelOrderEdit} className="rounded-2xl bg-white/10 px-3 py-2 text-sm font-semibold text-white transition hover:bg-white/20">Cancelar edição</button>
-            </div>
-          )}
           {cartItems.length === 0 ? (
             <p className="mt-4 text-white/70">Nenhum item adicionado ainda.</p>
           ) : (
@@ -268,7 +318,7 @@ export default function Adquira() {
               disabled={loading}
               className="w-full rounded-3xl bg-gradient-to-r from-[#FFA800] to-[#FF2525] px-6 py-4 text-black font-bold transition hover:scale-105 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
             >
-              {loading ? 'Salvando...' : editingOrderId ? 'Salvar alterações' : 'Finalizar pedido'}
+              {loading ? 'Finalizando...' : 'Finalizar pedido'}
             </button>
           </div>
         </div>
@@ -286,36 +336,98 @@ export default function Adquira() {
                   <p className="text-white font-semibold">Pedido {pedido.id}</p>
                   <span className="rounded-full bg-white/10 px-3 py-1 text-sm text-white/70">{getStatusLabel(pedido.status)}</span>
                 </div>
-                <div className="mt-3 text-white/70">
-                  <p>Total: R$ {pedido.total?.toFixed(2) ?? '0.00'}</p>
-                  <p className="mt-2">Itens: {pedido.items.map((it) => `${it.name}${it.quantity ? ` x${it.quantity}` : ''}`).join(', ')}</p>
-                </div>
-                <div className="mt-5 flex flex-wrap gap-3">
-                  <button
-                    type="button"
-                    onClick={() => handleEditOrder(pedido)}
-                    disabled={pedido.status === 'completed' || actionOrderId === pedido.id}
-                    className="rounded-2xl bg-[#ffb300] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[#e6a100] disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    Editar
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleCompleteOrder(pedido.id)}
-                    disabled={pedido.status === 'completed' || actionOrderId === pedido.id}
-                    className="rounded-2xl bg-emerald-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {actionOrderId === pedido.id ? 'Processando...' : 'Concluir'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteOrder(pedido.id)}
-                    disabled={actionOrderId === pedido.id}
-                    className="rounded-2xl bg-red-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    Excluir
-                  </button>
-                </div>
+                {editingOrderId === pedido.id ? (
+                  <div className="mt-5 space-y-5">
+                    <div className="space-y-3">
+                      {editOrderItems.length === 0 ? (
+                        <p className="rounded-2xl border border-red-400/30 bg-red-950/20 p-4 text-sm text-red-100">Adicione ao menos uma bebida ao pedido.</p>
+                      ) : (
+                        editOrderItems.map((item) => (
+                          <div key={item.id} className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                              <div>
+                                <p className="font-semibold text-white">{item.name}</p>
+                                <p className="text-sm text-white/70">R$ {item.price.toFixed(2)} cada</p>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <button type="button" onClick={() => updateEditingOrderQuantity(item.id, -1)} className="rounded-full bg-white/10 px-3 py-2 text-white transition hover:bg-white/20">-</button>
+                                <span className="min-w-[2rem] text-center text-white">{item.quantity}</span>
+                                <button type="button" onClick={() => updateEditingOrderQuantity(item.id, 1)} className="rounded-full bg-white/10 px-3 py-2 text-white transition hover:bg-white/20">+</button>
+                                <button type="button" onClick={() => removeFromEditingOrder(item.id)} className="rounded-2xl bg-red-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-red-600">Remover</button>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+
+                    <div>
+                      <p className="text-sm font-semibold text-white/80">Adicionar bebida ao pedido</p>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {beers.map((beer) => (
+                          <button
+                            key={beer.id}
+                            type="button"
+                            onClick={() => addToEditingOrder(beer)}
+                            className="rounded-2xl bg-white/10 px-3 py-2 text-sm font-semibold text-white transition hover:bg-white/20"
+                          >
+                            {beer.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-3 border-t border-white/10 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                      <p className="text-white/80">Novo total: <span className="font-semibold text-white">R$ {editTotalPrice.toFixed(2)}</span></p>
+                      <div className="flex flex-wrap gap-3">
+                        <button
+                          type="button"
+                          onClick={handleSaveEditedOrder}
+                          disabled={actionOrderId === pedido.id}
+                          className="rounded-2xl bg-[#ffb300] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[#e6a100] disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {actionOrderId === pedido.id ? 'Salvando...' : 'Salvar alterações'}
+                        </button>
+                        <button type="button" onClick={cancelOrderEdit} className="rounded-2xl bg-white/10 px-3 py-2 text-sm font-semibold text-white transition hover:bg-white/20">
+                          Cancelar
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="mt-3 text-white/70">
+                      <p>Total: R$ {pedido.total?.toFixed(2) ?? '0.00'}</p>
+                      <p className="mt-2">Itens: {pedido.items.map((it) => `${it.name}${it.quantity ? ` x${it.quantity}` : ''}`).join(', ')}</p>
+                    </div>
+                    <div className="mt-5 flex flex-wrap gap-3">
+                      <button
+                        type="button"
+                        onClick={() => handleEditOrder(pedido)}
+                        disabled={pedido.status === 'completed' || actionOrderId === pedido.id}
+                        className="rounded-2xl bg-[#ffb300] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[#e6a100] disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleCompleteOrder(pedido.id)}
+                        disabled={pedido.status === 'completed' || actionOrderId === pedido.id}
+                        className="rounded-2xl bg-emerald-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {actionOrderId === pedido.id ? 'Processando...' : 'Concluir'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteOrder(pedido.id)}
+                        disabled={actionOrderId === pedido.id}
+                        className="rounded-2xl bg-red-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Excluir
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             ))
           )}

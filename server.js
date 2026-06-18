@@ -7,6 +7,11 @@ const dataDir = path.resolve('data')
 const seedDir = path.resolve('public', 'data')
 const usersPath = path.join(dataDir, 'users.json')
 const ordersPath = path.join(dataDir, 'orders.json')
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+}
 
 /**
  * Envia uma resposta JSON padronizada ao cliente, incluindo cabeçalhos CORS.
@@ -18,9 +23,7 @@ function sendJson(res, data, status = 200) {
   const payload = JSON.stringify(data, null, 2)
   res.writeHead(status, {
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    ...corsHeaders,
   })
   res.end(payload)
 }
@@ -118,11 +121,7 @@ const server = http.createServer(async (req, res) => {
   const method = req.method
 
   if (method === 'OPTIONS') {
-    res.writeHead(204, {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    })
+    res.writeHead(204, corsHeaders)
     return res.end()
   }
 

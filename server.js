@@ -19,7 +19,7 @@ function sendJson(res, data, status = 200) {
   res.writeHead(status, {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET,POST,PUT,OPTIONS',
+    'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   })
   res.end(payload)
@@ -120,7 +120,7 @@ const server = http.createServer(async (req, res) => {
   if (method === 'OPTIONS') {
     res.writeHead(204, {
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET,POST,PUT,OPTIONS',
+      'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     })
     return res.end()
@@ -172,6 +172,23 @@ const server = http.createServer(async (req, res) => {
       users[idx] = { ...users[idx], name: body.name ?? users[idx].name, email: body.email ?? users[idx].email }
       await writeJson(usersPath, users)
       return sendJson(res, { ...users[idx] })
+    }
+
+    if (pathname.startsWith('/api/users/') && method === 'DELETE') {
+      const uid = pathname.replace('/api/users/', '')
+      const auth = req.headers['authorization'] || ''
+      if (!auth.startsWith('Bearer ')) return sendJson(res, { message: 'Não autorizado' }, 401)
+      const token = auth.replace('Bearer ', '')
+      if (token !== uid) return sendJson(res, { message: 'Acesso proibido' }, 403)
+      const users = await readJson(usersPath)
+      const userExists = users.some((u) => u.uid === uid)
+      if (!userExists) return sendJson(res, { message: 'Usuário não encontrado' }, 404)
+      await writeJson(usersPath, users.filter((u) => u.uid !== uid))
+
+      const orders = await readJson(ordersPath)
+      await writeJson(ordersPath, orders.filter((order) => order.userId !== uid))
+
+      return sendJson(res, { message: 'Conta excluída com sucesso' })
     }
 
     if (pathname === '/api/orders' && method === 'GET') {

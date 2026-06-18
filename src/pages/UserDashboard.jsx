@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { getUserProfile, updateUser } from '../services/authService'
+import { deleteUser, getUserProfile, updateUser } from '../services/authService'
 
 const products = [
   { id: 'heineken', name: 'Heineken', price: 12.5 },
@@ -16,6 +16,7 @@ export default function UserDashboard({ user, onLogout, onUpdateUser }) {
   const [editing, setEditing] = useState(false)
   const [form, setForm] = useState({ name: '', email: '' })
   const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   /**
    * Carrega os dados do perfil do usuário autenticado sempre que o usuário mudar.
@@ -47,6 +48,25 @@ export default function UserDashboard({ user, onLogout, onUpdateUser }) {
       alert('Erro ao atualizar perfil')
     } finally {
       setSaving(false)
+    }
+  }
+
+  /**
+   * Confirma e exclui a própria conta do usuário autenticado.
+   */
+  const handleDeleteAccount = async () => {
+    const confirmed = window.confirm('Tem certeza que deseja excluir sua conta? Esta ação não pode ser desfeita.')
+    if (!confirmed) return
+
+    setDeleting(true)
+    try {
+      await deleteUser(user.uid)
+      window.alert('Conta excluída com sucesso.')
+      if (onLogout) await onLogout()
+    } catch (e) {
+      alert('Erro ao excluir conta')
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -86,6 +106,19 @@ export default function UserDashboard({ user, onLogout, onUpdateUser }) {
             </div>
           </div>
         )}
+      </div>
+
+      <div className="mt-6 rounded-3xl border border-red-400/40 bg-red-950/30 p-6">
+        <h3 className="text-2xl font-semibold text-red-100">Excluir conta</h3>
+        <p className="mt-2 text-red-100/80">Ao excluir sua conta, seus dados de perfil e pedidos serão removidos permanentemente.</p>
+        <button
+          type="button"
+          onClick={handleDeleteAccount}
+          disabled={deleting}
+          className="mt-4 rounded-2xl bg-red-600 px-4 py-2 font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {deleting ? 'Excluindo...' : 'Excluir minha conta'}
+        </button>
       </div>
     </section>
   )

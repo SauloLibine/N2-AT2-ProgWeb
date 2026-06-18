@@ -84,6 +84,22 @@ export async function updateUser(uid, { name, email }) {
 }
 
 /**
+ * Exclui a conta do usuário autenticado na API e limpa a sessão local.
+ * @param {string} uid - Identificador único do usuário.
+ * @returns {Promise<any>} Confirmação retornada pela API.
+ */
+export async function deleteUser(uid) {
+  const result = await request(`/users/${uid}`, {
+    method: 'DELETE',
+  })
+  const current = JSON.parse(localStorage.getItem('mock_current_user') || 'null')
+  if (current && current.uid === uid) {
+    localStorage.removeItem('mock_current_user')
+  }
+  return result
+}
+
+/**
  * Envia um pedido de compra para a API, associando-o ao usuário autenticado.
  * @param {string} uid - Identificador do usuário que realiza o pedido.
  * @param {Object} order - Dados do pedido, incluindo itens e total.

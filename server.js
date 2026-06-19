@@ -281,6 +281,7 @@ const server = http.createServer(async (req, res) => {
   }
 })
 
+/*
 ensureSeedFiles().then(() => {
   server.listen(PORT, () => {
     console.log(`JSON persistence server running at http://localhost:${PORT}`)
@@ -289,3 +290,15 @@ ensureSeedFiles().then(() => {
   console.error('Falha ao inicializar o servidor:', err)
   process.exit(1)
 })
+*/
+
+// supertest
+await ensureSeedFiles();
+
+if (process.env.NODE_ENV !== "test") {
+  server.listen(PORT, () => {
+    console.log(`Servidor iniciado na porta ${PORT}`);
+  });
+}
+
+export default server;

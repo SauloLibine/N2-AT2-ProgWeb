@@ -1,1 +1,9 @@
-[]
+[
+  {
+    "uid": "user_1781752004266_l9sdbf",
+    "name": "saulo",
+    "email": "saulo@email.com",
+    "password": "12345",
+    "createdAt": "2026-06-18T03:06:44.266Z"
+  }
+]

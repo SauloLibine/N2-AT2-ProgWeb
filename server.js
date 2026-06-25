@@ -7,6 +7,8 @@ const dataDir = path.resolve('data')
 const seedDir = path.resolve('public', 'data')
 const usersPath = path.join(dataDir, 'users.json')
 const ordersPath = path.join(dataDir, 'orders.json')
+
+// Cabeçalhos CORS reutilizados em todas as respostas da API.
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
@@ -120,12 +122,14 @@ const server = http.createServer(async (req, res) => {
   const pathname = url.pathname
   const method = req.method
 
+  // Responde a requisições preflight do navegador antes de processar as rotas.
   if (method === 'OPTIONS') {
     res.writeHead(204, corsHeaders)
     return res.end()
   }
 
   try {
+    // Login simples: valida email e senha diretamente no arquivo de usuários.
     if (pathname === '/api/login' && method === 'POST') {
       const body = await parseBody(req)
       const users = await readJson(usersPath)
@@ -134,6 +138,7 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, { ...user })
     }
 
+    // Cadastro de usuário: rejeita emails repetidos e persiste o novo registro.
     if (pathname === '/api/users' && method === 'POST') {
       const body = await parseBody(req)
       const users = await readJson(usersPath)
@@ -146,6 +151,7 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, { ...user })
     }
 
+    // Busca de usuário protegida: o token precisa ser o mesmo uid solicitado.
     if (pathname.startsWith('/api/users/') && method === 'GET') {
       const uid = pathname.replace('/api/users/', '')
       const auth = req.headers['authorization'] || ''
@@ -158,6 +164,7 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, { ...user })
     }
 
+    // Atualização de perfil: altera apenas os campos enviados no corpo da requisição.
     if (pathname.startsWith('/api/users/') && (method === 'PUT' || method === 'PATCH')) {
       const uid = pathname.replace('/api/users/', '')
       const auth = req.headers['authorization'] || ''
@@ -173,6 +180,7 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, { ...users[idx] })
     }
 
+    // Exclusão de conta: remove o usuário e também limpa seus pedidos relacionados.
     if (pathname.startsWith('/api/users/') && method === 'DELETE') {
       const uid = pathname.replace('/api/users/', '')
       const auth = req.headers['authorization'] || ''
@@ -190,6 +198,7 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, { message: 'Conta excluída com sucesso' })
     }
 
+    // Listagem de pedidos: pode retornar todos ou apenas os pedidos de um usuário.
     if (pathname === '/api/orders' && method === 'GET') {
       const userId = url.searchParams.get('userId')
       const auth = req.headers['authorization'] || ''
@@ -203,6 +212,7 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, result)
     }
 
+    // Criação de pedido: exige usuário autenticado e salva o pedido como pendente.
     if (pathname === '/api/orders' && method === 'POST') {
       const body = await parseBody(req)
       if (!body.userId) return sendJson(res, { message: 'userId obrigatório' }, 400)
@@ -224,6 +234,7 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, order, 201)
     }
 
+    // Atualização de pedido: permite mudar itens, total e status do pedido existente.
     if (pathname.startsWith('/api/orders/') && (method === 'PUT' || method === 'PATCH')) {
       const orderId = pathname.replace('/api/orders/', '')
       const body = await parseBody(req)
@@ -255,6 +266,7 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, orders[idx])
     }
 
+    // Exclusão de pedido: só remove quando o pedido pertence ao usuário autenticado.
     if (pathname.startsWith('/api/orders/') && method === 'DELETE') {
       const orderId = pathname.replace('/api/orders/', '')
       const body = await parseBody(req)
@@ -274,6 +286,7 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, { message: 'Pedido excluído com sucesso' })
     }
 
+    // Fallback para qualquer rota que não tenha sido tratada acima.
     sendJson(res, { message: 'Rota não encontrada' }, 404)
   } catch (err) {
     console.error(err)
